@@ -1,2 +1,4 @@
 ﻿  application.cpp
-  Project1.vcxproj -> C:\Users\jimne\OneDrive\Desktop\660\Authoring Tool\Project1\x64\Debug\VideoStylizer.exe
+c:\users\jimne\documents\github\authoring-tool\project1\project1\src\application.cpp(132): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\x64\Debug\VideoStylizer.exe : fatal error LNK1120: 1 unresolved externals
