@@ -1,3 +1,0 @@
-﻿  application.cpp
-application.obj : error LNK2001: unresolved external symbol __imp_glClear
-C:\Users\jimne\OneDrive\Desktop\660\Authoring Tool\Project1\x64\Release\VideoStylizer.exe : fatal error LNK1120: 1 unresolved externals
