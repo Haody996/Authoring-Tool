@@ -36,8 +36,8 @@ int main(int argc, char** argv)
     unsigned int h = target.size().height();
     Gradient(w, h);
 
-    //get any positional guide, e.g. between keyframe 0 and target frame 51
-    PositionalGuide(0,51);
+    //get any positional guide, e.g. between keyframe 0 and target frame 10
+    PositionalGuide(0,11);
 
 
     /**
@@ -92,16 +92,30 @@ std::string fixedLength(int value, int digits = 3) {
 
 int PositionalGuide(int f1,int f2) {
     Mat first, first_gray, second, second_gray, flow_n, base;
-    first = cv::imread(".\\resources\\target\\"+ fixedLength(f1) + ".jpg", 1);
-    second = cv::imread(".\\resources\\target\\" + fixedLength(f2) + ".jpg", 1);
     base = cv::imread("gradient.jpg", 1);
-    cvtColor(first, first_gray, CV_BGR2GRAY);
-    cvtColor(second, second_gray, CV_RGB2GRAY);
-    calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
+    int count = f1;
     Mat remap_n;
-    createNewFrame(remap_n, flow_n, 1,base);
+    do {
+        first = cv::imread(".\\resources\\target\\" + fixedLength(count) + ".jpg", 1);
+        second = cv::imread(".\\resources\\target\\" + fixedLength(count + 1) + ".jpg", 1);
+        
+        cvtColor(first, first_gray, CV_BGR2GRAY);
+        cvtColor(second, second_gray, CV_RGB2GRAY);
+        calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
+        createNewFrame(remap_n, flow_n, 1, base);
+        base = remap_n;
+        count++;
+        //imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + "_" + to_string(count) + ".jpg", remap_n);
+    } while (count < f2);
+
     //imshow("remap_n", remap_n);
-    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + ".jpg", remap_n);
+    imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + ".jpg", remap_n);
+    Mat mask, rest;
+    inRange(remap_n, Scalar(0,0,0), Scalar(5,5,5), mask);
+    base = cv::imread("gradient.jpg", 1);
+    bitwise_or(remap_n, base, rest,mask);
+    remap_n = remap_n + rest;
+    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + "_2.jpg", remap_n);
     return 0;
 }
 
