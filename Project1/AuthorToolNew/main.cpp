@@ -90,6 +90,18 @@ std::string fixedLength(int value, int digits = 3) {
     return result;
 }
 
+void TemporalGuide(int f) {
+    Mat first, first_gray, second, second_gray, flow_n, pre, result;
+    pre = cv::imread(".\\result\\" + fixedLength(f-1) + ".jpg", 1);
+    first = cv::imread(".\\resources\\target\\" + fixedLength(f-1) + ".jpg", 1);
+    second = cv::imread(".\\resources\\target\\" + fixedLength(f) + ".jpg", 1);
+    cvtColor(first, first_gray, CV_BGR2GRAY);
+    cvtColor(second, second_gray, CV_RGB2GRAY);
+    calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
+    createNewFrame(result, flow_n, 1, pre);
+    imwrite(".\\temporal\\" + fixedLength(f) + ".jpg", result);
+}
+
 int PositionalGuide(int f1,int f2) {
     Mat first, first_gray, second, second_gray, flow_n, base;
     base = cv::imread("gradient.jpg", 1);
