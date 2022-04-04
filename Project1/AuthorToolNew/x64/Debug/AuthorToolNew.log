@@ -1,1 +1,4 @@
-﻿  AuthorToolNew.vcxproj -> C:\Users\jimne\Desktop\660\AuthorTool\AuthorToolNew\AuthorToolNew\x64\Debug\AuthorToolNew.exe
+﻿  main.cpp
+C:\Users\jimne\Desktop\660\AuthorTool\AuthorToolNew\AuthorToolNew\AuthorToolNew\main.cpp(32,43): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jimne\Desktop\660\AuthorTool\AuthorToolNew\AuthorToolNew\AuthorToolNew\main.cpp(33,44): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+  AuthorToolNew.vcxproj -> C:\Users\jimne\Desktop\660\AuthorTool\AuthorToolNew\AuthorToolNew\x64\Debug\AuthorToolNew.exe
