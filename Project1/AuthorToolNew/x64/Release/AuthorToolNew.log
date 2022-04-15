@@ -1,9 +1,9 @@
 ﻿  main.cpp
-C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\AuthorToolNew\main.cpp(35,43): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\AuthorToolNew\main.cpp(36,44): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\AuthorToolNew\main.cpp(37,43): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\AuthorToolNew\main.cpp(38,44): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
   Generating code
-  0 of 176 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    14 functions had inline decision re-evaluated but remain unchanged
+  150 of 189 functions (79.4%) were compiled, the rest were copied from previous compilation.
+    3 functions were new in current compilation
+    4 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   AuthorToolNew.vcxproj -> C:\Users\jimne\Documents\GitHub\Authoring-Tool\Project1\x64\Release\AuthorToolNew.exe

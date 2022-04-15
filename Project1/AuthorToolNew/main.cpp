@@ -17,6 +17,8 @@ using namespace Magick;
 std::string fixedLength(int value, int digits);
 int Gradient(int, int);
 int PositionalGuide(int, int);
+
+void EdgeGuide(string source, string distination);
 void createNewFrame(cv::Mat& frame, const cv::Mat& flow, float shift, cv::Mat& next);
 
 
@@ -28,7 +30,7 @@ int main(int argc, char** argv)
     Image target;
 
     //for optical flow
-    string video = ".\\resources\\test.mov";
+    //string video = ".\\resources\\test.mov";
 
     //base for positional guide
     target.read(".\\resources\\target\\000.jpg");
@@ -37,34 +39,13 @@ int main(int argc, char** argv)
     Gradient(w, h);
 
     //get any positional guide, e.g. between keyframe 0 and target frame 10
-    PositionalGuide(0,11);
-
-
-    /**
-
-    
+    PositionalGuide(0,10);
     try{
+        EdgeGuide(".\\resources\\000_key.jpg", ".\\keyframe_guides\\edge.jpg");
         for (int i = 0; i < 100; i++) {
             string s = fixedLength(i, 3);
             //target.read(".\\resources\\target\\000.jpg");
-            target.read(".\\resources\\target\\" + s + ".jpg");
-
-            //getting edge guide
-            Image color_guide(target);
-            Image blur(target);
-            Image edge_guide(target);
-            //gaussian blur and image subtraction as per paper
-            blur.gaussianBlur(4, 5);
-            edge_guide.composite(blur, 0, 0, MinusDstCompositeOp);
-            //highlight edges
-            edge_guide.edge();
-            //grayscale image
-            edge_guide.quantizeColorSpace(GRAYColorspace);
-            edge_guide.quantizeColors(256);
-            edge_guide.quantize();
-            //negate color of image
-            edge_guide.negate();
-            edge_guide.write(".\\edges\\"+s+".jpg");
+            EdgeGuide(".\\resources\\target\\" + s + ".jpg", ".\\edges\\" + s + ".jpg");
 
         }
        
@@ -74,7 +55,7 @@ int main(int argc, char** argv)
         cout << "Caught exception: " << error_.what() << endl;
         return 1;
     }
-    ***/
+    
     return 0;
 
 }
@@ -88,6 +69,29 @@ std::string fixedLength(int value, int digits = 3) {
     }
     std::reverse(result.begin(), result.end());
     return result;
+}
+
+void EdgeGuide(string source, string distination) {
+    Image target;
+    target.read(source);
+
+    //getting edge guide
+    Image color_guide(target);
+    Image blur(target);
+    Image edge_guide(target);
+    //gaussian blur and image subtraction as per paper
+    blur.gaussianBlur(4, 5);
+    edge_guide.composite(blur, 0, 0, MinusDstCompositeOp);
+    //highlight edges
+    edge_guide.edge();
+    //grayscale image
+    edge_guide.quantizeColorSpace(GRAYColorspace);
+    edge_guide.quantizeColors(256);
+    edge_guide.quantize();
+    //negate color of image
+    edge_guide.negate();
+    edge_guide.write(distination);
+
 }
 
 void TemporalGuide(int f) {
@@ -121,13 +125,13 @@ int PositionalGuide(int f1,int f2) {
     } while (count < f2);
 
     //imshow("remap_n", remap_n);
-    imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + ".jpg", remap_n);
+    //imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + ".jpg", remap_n);
     Mat mask, rest;
     inRange(remap_n, Scalar(0,0,0), Scalar(5,5,5), mask);
     base = cv::imread("gradient.jpg", 1);
     bitwise_or(remap_n, base, rest,mask);
     remap_n = remap_n + rest;
-    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + "_2.jpg", remap_n);
+    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + ".jpg", remap_n);
     return 0;
 }
 
