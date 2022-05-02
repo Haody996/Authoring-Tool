@@ -188,4 +188,5 @@ void NNF::minimize(int pass)
 				for (int x = max_x; x >= min_x; x--)
 					if (field.at<cv::Vec3b>(y, x)[2] > 0) minimizeLink(x, y, -1);
 		}
+	}
 }

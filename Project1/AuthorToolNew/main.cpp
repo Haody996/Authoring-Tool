@@ -22,11 +22,11 @@ void EdgeGuide(string source, string distination);
 void createNewFrame(cv::Mat& frame, const cv::Mat& flow, float shift, cv::Mat& next);
 int Difference(String f1, String f2, int px, int py, int qx, int qy);
 void TemporalGuide(int f);
-double errorFuc(int target, int px, int py, int qx, int qy);
 int Difference(Mat f1, Mat f2, int px, int py, int qx, int qy);
 
 String targetFolder = ".\\resources\\target\\";
 String keyframeFolder = ".\\keyframe_guides\\";
+String keyframeLocation = ".\\keyframe_guides\\keyframe.jpg";
 
 int main(int argc, char** argv)
 {
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     Image target;
 
     Mat target_000;
-    target_000 = imread(keyframeFolder+"keyframe.jpg");
+    target_000 = imread(targetFolder+"000.jpg");
     int width = target_000.size().width;
     int height = target_000.size().height;
 
@@ -44,11 +44,11 @@ int main(int argc, char** argv)
 
     //weights for error function
     double lambda_col = 7;
-    double lambda_pos = 2;
-    double lambda_edge = 1;
+    double lambda_pos = 1;
+    double lambda_edge = 2;
     double lambda_temp = 0.5;
 
-    /***
+    
     //base for positional guide
     target.read(targetFolder+"000.jpg");
     unsigned int w = target.size().width();
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     Gradient(w, h);
 
     //get any positional guide, e.g. between keyframe 0 and target frame 10
-    PositionalGuide(0,10);
+    /*
     try{
         //EdgeGuide(".\\resources\\000_key.jpg", ".\\keyframe_guides\\edge.jpg");
         for (int i = 0; i < 100; i++) {
@@ -72,32 +72,39 @@ int main(int argc, char** argv)
         cout << "Caught exception: " << error_.what() << endl;
         return 1;
     }
-    ****/
-
     
-    Image key,key_origin,target_origin;
-    key.read(keyframeFolder+"keyframe.jpg");
+    
+    for (int i = 1; i < 100; i++) {
+        PositionalGuide(0, i);
+    }
+    */
+
+
+    Image key,key_origin;
+    key.read(keyframeLocation);
     key_origin.read(targetFolder + "000.jpg");
-    target_origin.read(keyframeFolder + "keyframe.jpg");
 
     Mat col_origin = imread(keyframeFolder + "origin.jpg");
     Mat pos_origin = imread(keyframeFolder + "gradient.jpg");
     Mat edge_origin = imread(keyframeFolder + "edge.jpg");
-    Mat keyframe = imread(keyframeFolder + "keyframe.jpg");
+    Mat keyframe = imread(keyframeLocation);
 
 
     for (int i = 1; i < 100; i++) {
-        Mat prev = imread(".\\result\\" + fixedLength(i - 1, 3) + ".jpg");
-        Mat prev_blurred;
-        GaussianBlur(prev, prev_blurred,Size(5,5),1);
-        imwrite(".\\blur\\" + fixedLength(i, 3) + ".jpg", prev_blurred);
+        Mat prev = imread(".\\result_test\\" + fixedLength(i - 1, 3) + ".jpg");
+        //Mat prev_blurred;
+        //GaussianBlur(prev, prev_blurred,Size(5,5),1);
+        //imwrite(".\\blur\\" + fixedLength(i, 3) + ".jpg", prev_blurred);
         
+        
+        TemporalGuide(i);
+        Mat temporal = imread(".\\temporal\\" + fixedLength(i,3) + ".jpg");
 
 
         //for each pixel in target in scan line order
 
         int target_frame = i;
-        PositionalGuide(0, target_frame);
+        
         Mat col_target = imread(targetFolder + fixedLength(target_frame, 3) + ".jpg");
         Mat pos_target = imread(".\\positional\\" + fixedLength(0, 3) + "_" + fixedLength(target_frame, 3) + ".jpg");
         Mat edge_target = imread(".\\edges\\" + fixedLength(target_frame, 3) + ".jpg");
@@ -107,18 +114,20 @@ int main(int argc, char** argv)
 
                 //find in source keyframe
 
-                int minE = 200000000;
+                int minE = 10000000000000;
                 int temppy = qy, temppx = qx;
          
-                for (int py = qy-2; py < qy+3; py++) {
-                    for (int px = qx-2; px < qx+3; px++) {
+                for (int py = qy-20; py < qy+20; py++) {
+                    for (int px = qx-150; px < qx+30; px++) {
                         if (px < 0 || px >= width || py<0 || py >= height) {
 
                         }
                         else {
-                            int e = Difference(keyframe,prev_blurred, px, py, qx, qy);
+                            int e = Difference(keyframe,prev, px, py, qx, qy);
 
-                            e = lambda_col *Difference(col_origin, col_target, px, py, qx, qy)+ lambda_pos *Difference(pos_origin,pos_target,px,py,qx,qy)+ lambda_edge * Difference(edge_origin,edge_target,px,py,qx,qy);
+                            //e += lambda_col * Difference(col_origin, col_target, px, py, qx, qy) + lambda_pos * Difference(pos_origin,pos_target,px,py,qx,qy) + lambda_edge * Difference(edge_origin,edge_target,px,py,qx,qy);
+                            e += lambda_col * Difference(col_origin, col_target, px, py, qx, qy) + lambda_pos * Difference(pos_origin, pos_target, px, py, qx, qy) + lambda_edge * Difference(edge_origin, edge_target, px, py, qx, qy);
+
                             if (e < minE) {
                                 minE = e;
                                 temppy = py;
@@ -134,8 +143,8 @@ int main(int argc, char** argv)
                 key_origin.pixelColor(qx, qy, key.pixelColor(temppx, temppy));
             }
         }
-        key_origin.write(".\\result\\"+fixedLength(i,3)+".jpg");
-        cout << i << endl;
+        key_origin.write(".\\result_test\\"+fixedLength(i,3)+".jpg");
+        std::cout << i << endl;
 
     }
     return 0;
@@ -164,24 +173,7 @@ std::string fixedLength(int value, int digits = 3) {
     return result;
 }
 
-double errorFuc(int target, int px, int py, int qx, int qy) {
-    String targetFrame = targetFolder + fixedLength(target, 3) + ".jpg";
-    int colorDiff, posDiff,edgeDiff,tempDiff;
-    colorDiff = 0;
-    posDiff = 0;
-    edgeDiff = 0;
-    /*
-    
-    
-    colorDiff = Difference(targetFrame, keyframeFolder+"origin.jpg",px,py,qx,qy);
-    PositionalGuide(0, target);
-    posDiff = Difference(".\\positional\\"+fixedLength(0,3)+"_"+fixedLength(target,3)+".jpg", keyframeFolder + "gradient.jpg", px, py, qx, qy);
-    //posDiff = Difference(keyframeFolder + "gradient.jpg", keyframeFolder + "gradient.jpg", px, py, qx, qy);
-    edgeDiff = Difference(".\\edges\\" + fixedLength(target, 3) + ".jpg", keyframeFolder + "edge.jpg", px, py, qx, qy);
-    //tempDiff = Difference(".\\temporal\\" + fixedLength(target, 3) + ".jpg", keyframeFolder + "keyframe.jpg",px,py,qx,qy);
-    */
-    return 7*colorDiff+2*posDiff+1*edgeDiff;
-}
+
 
 void EdgeGuide(string source, string distination) {
     Image target;
@@ -208,18 +200,18 @@ void EdgeGuide(string source, string distination) {
 
 void TemporalGuide(int f) {
     Mat first, first_gray, second, second_gray, flow_n, pre, result, base;
-    pre = cv::imread(".\\result\\" + fixedLength(f-1) + ".jpg", 1);
-    first = cv::imread(targetFolder + fixedLength(f-1) + ".jpg", 1);
-    second = cv::imread(targetFolder + fixedLength(f) + ".jpg", 1);
+    base = cv::imread(".\\result_test\\" + fixedLength(f-1,3) + ".jpg", 1);
+    first = cv::imread(targetFolder + fixedLength(f-1,3) + ".jpg", 1);
+    second = cv::imread(targetFolder + fixedLength(f,3) + ".jpg", 1);
     cvtColor(first, first_gray, CV_BGR2GRAY);
     cvtColor(second, second_gray, CV_RGB2GRAY);
     calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
     createNewFrame(result, flow_n, 1, pre);
 
-    Mat mask, rest;
-    inRange(result, Scalar(0, 0, 0), Scalar(5, 5, 5), mask);
-    bitwise_or(result, pre, rest, mask);
-    result = result + rest;
+    //Mat mask, rest;
+    //inRange(result, Scalar(0, 0, 0), Scalar(5, 5, 5), mask);
+    //bitwise_or(result, base, rest, mask);
+    //result = result + rest;
     imwrite(".\\temporal\\" + fixedLength(f) + ".jpg", result);
 }
 
