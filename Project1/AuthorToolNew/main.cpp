@@ -20,7 +20,13 @@ int PositionalGuide(int, int);
 
 void EdgeGuide(string source, string distination);
 void createNewFrame(cv::Mat& frame, const cv::Mat& flow, float shift, cv::Mat& next);
+int Difference(String f1, String f2, int px, int py, int qx, int qy);
+void TemporalGuide(int f);
+double errorFuc(int target, int px, int py, int qx, int qy);
+int Difference(Mat f1, Mat f2, int px, int py, int qx, int qy);
 
+String targetFolder = ".\\resources\\target\\";
+String keyframeFolder = ".\\keyframe_guides\\";
 
 int main(int argc, char** argv)
 {
@@ -29,11 +35,22 @@ int main(int argc, char** argv)
     // Construct the image object
     Image target;
 
-    //for optical flow
-    //string video = ".\\resources\\test.mov";
+    Mat target_000;
+    target_000 = imread(keyframeFolder+"keyframe.jpg");
+    int width = target_000.size().width;
+    int height = target_000.size().height;
 
+    
+
+    //weights for error function
+    double lambda_col = 7;
+    double lambda_pos = 2;
+    double lambda_edge = 1;
+    double lambda_temp = 0.5;
+
+    /***
     //base for positional guide
-    target.read(".\\resources\\target\\000.jpg");
+    target.read(targetFolder+"000.jpg");
     unsigned int w = target.size().width();
     unsigned int h = target.size().height();
     Gradient(w, h);
@@ -41,11 +58,11 @@ int main(int argc, char** argv)
     //get any positional guide, e.g. between keyframe 0 and target frame 10
     PositionalGuide(0,10);
     try{
-        EdgeGuide(".\\resources\\000_key.jpg", ".\\keyframe_guides\\edge.jpg");
+        //EdgeGuide(".\\resources\\000_key.jpg", ".\\keyframe_guides\\edge.jpg");
         for (int i = 0; i < 100; i++) {
             string s = fixedLength(i, 3);
             //target.read(".\\resources\\target\\000.jpg");
-            EdgeGuide(".\\resources\\target\\" + s + ".jpg", ".\\edges\\" + s + ".jpg");
+            EdgeGuide(targetFolder + s + ".jpg", ".\\edges\\" + s + ".jpg");
 
         }
        
@@ -55,8 +72,84 @@ int main(int argc, char** argv)
         cout << "Caught exception: " << error_.what() << endl;
         return 1;
     }
+    ****/
+
     
+    Image key,key_origin,target_origin;
+    key.read(keyframeFolder+"keyframe.jpg");
+    key_origin.read(targetFolder + "000.jpg");
+    target_origin.read(keyframeFolder + "keyframe.jpg");
+
+    Mat col_origin = imread(keyframeFolder + "origin.jpg");
+    Mat pos_origin = imread(keyframeFolder + "gradient.jpg");
+    Mat edge_origin = imread(keyframeFolder + "edge.jpg");
+    Mat keyframe = imread(keyframeFolder + "keyframe.jpg");
+
+
+    for (int i = 1; i < 100; i++) {
+        Mat prev = imread(".\\result\\" + fixedLength(i - 1, 3) + ".jpg");
+        Mat prev_blurred;
+        GaussianBlur(prev, prev_blurred,Size(5,5),1);
+        imwrite(".\\blur\\" + fixedLength(i, 3) + ".jpg", prev_blurred);
+        
+
+
+        //for each pixel in target in scan line order
+
+        int target_frame = i;
+        PositionalGuide(0, target_frame);
+        Mat col_target = imread(targetFolder + fixedLength(target_frame, 3) + ".jpg");
+        Mat pos_target = imread(".\\positional\\" + fixedLength(0, 3) + "_" + fixedLength(target_frame, 3) + ".jpg");
+        Mat edge_target = imread(".\\edges\\" + fixedLength(target_frame, 3) + ".jpg");
+    
+        for (int qy = 0; qy < height; qy++) {
+            for (int qx = 0; qx < width; qx++) {
+
+                //find in source keyframe
+
+                int minE = 200000000;
+                int temppy = qy, temppx = qx;
+         
+                for (int py = qy-2; py < qy+3; py++) {
+                    for (int px = qx-2; px < qx+3; px++) {
+                        if (px < 0 || px >= width || py<0 || py >= height) {
+
+                        }
+                        else {
+                            int e = Difference(keyframe,prev_blurred, px, py, qx, qy);
+
+                            e = lambda_col *Difference(col_origin, col_target, px, py, qx, qy)+ lambda_pos *Difference(pos_origin,pos_target,px,py,qx,qy)+ lambda_edge * Difference(edge_origin,edge_target,px,py,qx,qy);
+                            if (e < minE) {
+                                minE = e;
+                                temppy = py;
+                                temppx = px;
+                            }
+                        }
+                    
+                    }
+                }
+                //cout << qx << endl;
+                //cout << qy << endl;
+ 
+                key_origin.pixelColor(qx, qy, key.pixelColor(temppx, temppy));
+            }
+        }
+        key_origin.write(".\\result\\"+fixedLength(i,3)+".jpg");
+        cout << i << endl;
+
+    }
     return 0;
+
+}
+
+int Difference(Mat f1, Mat f2, int px, int py, int qx, int qy) {
+    int result = 0;
+    int r = abs(f1.at<cv::Vec3b>(py, px)[0] - f2.at<cv::Vec3b>(qy, qx)[0]);
+    int g = abs(f1.at<cv::Vec3b>(py, px)[1] - f2.at<cv::Vec3b>(qy, qx)[1]);
+    int b = abs(f1.at<cv::Vec3b>(py, px)[2] - f2.at<cv::Vec3b>(qy, qx)[2]);
+
+    result = r + g + b;
+    return result * result;
 
 }
 
@@ -69,6 +162,25 @@ std::string fixedLength(int value, int digits = 3) {
     }
     std::reverse(result.begin(), result.end());
     return result;
+}
+
+double errorFuc(int target, int px, int py, int qx, int qy) {
+    String targetFrame = targetFolder + fixedLength(target, 3) + ".jpg";
+    int colorDiff, posDiff,edgeDiff,tempDiff;
+    colorDiff = 0;
+    posDiff = 0;
+    edgeDiff = 0;
+    /*
+    
+    
+    colorDiff = Difference(targetFrame, keyframeFolder+"origin.jpg",px,py,qx,qy);
+    PositionalGuide(0, target);
+    posDiff = Difference(".\\positional\\"+fixedLength(0,3)+"_"+fixedLength(target,3)+".jpg", keyframeFolder + "gradient.jpg", px, py, qx, qy);
+    //posDiff = Difference(keyframeFolder + "gradient.jpg", keyframeFolder + "gradient.jpg", px, py, qx, qy);
+    edgeDiff = Difference(".\\edges\\" + fixedLength(target, 3) + ".jpg", keyframeFolder + "edge.jpg", px, py, qx, qy);
+    //tempDiff = Difference(".\\temporal\\" + fixedLength(target, 3) + ".jpg", keyframeFolder + "keyframe.jpg",px,py,qx,qy);
+    */
+    return 7*colorDiff+2*posDiff+1*edgeDiff;
 }
 
 void EdgeGuide(string source, string distination) {
@@ -95,43 +207,60 @@ void EdgeGuide(string source, string distination) {
 }
 
 void TemporalGuide(int f) {
-    Mat first, first_gray, second, second_gray, flow_n, pre, result;
+    Mat first, first_gray, second, second_gray, flow_n, pre, result, base;
     pre = cv::imread(".\\result\\" + fixedLength(f-1) + ".jpg", 1);
-    first = cv::imread(".\\resources\\target\\" + fixedLength(f-1) + ".jpg", 1);
-    second = cv::imread(".\\resources\\target\\" + fixedLength(f) + ".jpg", 1);
+    first = cv::imread(targetFolder + fixedLength(f-1) + ".jpg", 1);
+    second = cv::imread(targetFolder + fixedLength(f) + ".jpg", 1);
     cvtColor(first, first_gray, CV_BGR2GRAY);
     cvtColor(second, second_gray, CV_RGB2GRAY);
     calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
     createNewFrame(result, flow_n, 1, pre);
+
+    Mat mask, rest;
+    inRange(result, Scalar(0, 0, 0), Scalar(5, 5, 5), mask);
+    bitwise_or(result, pre, rest, mask);
+    result = result + rest;
     imwrite(".\\temporal\\" + fixedLength(f) + ".jpg", result);
+}
+
+int Difference(String f1,String f2, int px, int py, int qx, int qy) {
+    Mat first, second;
+    first = cv::imread(f1);
+    second = cv::imread(f2);
+
+    int result = 0;
+
+    int r = abs(first.at<cv::Vec3b>(py, px)[0] - second.at<cv::Vec3b>(qy, qx)[0]);
+    int g = abs(first.at<cv::Vec3b>(py, px)[1] - second.at<cv::Vec3b>(qy, qx)[1]);
+    int b = abs(first.at<cv::Vec3b>(py, px)[2] - second.at<cv::Vec3b>(qy, qx)[2]);
+
+    result += r + g + b;
+
+    return result*result;
 }
 
 int PositionalGuide(int f1,int f2) {
     Mat first, first_gray, second, second_gray, flow_n, base;
     base = cv::imread("gradient.jpg", 1);
     int count = f1;
-    Mat remap_n;
+    Mat result;
     do {
-        first = cv::imread(".\\resources\\target\\" + fixedLength(count) + ".jpg", 1);
-        second = cv::imread(".\\resources\\target\\" + fixedLength(count + 1) + ".jpg", 1);
+        first = cv::imread(targetFolder + fixedLength(count) + ".jpg", 1);
+        second = cv::imread(targetFolder + fixedLength(count + 1) + ".jpg", 1);
         
         cvtColor(first, first_gray, CV_BGR2GRAY);
         cvtColor(second, second_gray, CV_RGB2GRAY);
         calcOpticalFlowFarneback(first_gray, second_gray, flow_n, 0.5, 3, 15, 3, 5, 1.2, 0);
-        createNewFrame(remap_n, flow_n, 1, base);
-        base = remap_n;
+        createNewFrame(result, flow_n, 1, base);
+        base = result;
         count++;
-        //imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + "_" + to_string(count) + ".jpg", remap_n);
     } while (count < f2);
-
-    //imshow("remap_n", remap_n);
-    //imwrite(".\\positional\\" + fixedLength(f1) + "_" + fixedLength(f2) + ".jpg", remap_n);
     Mat mask, rest;
-    inRange(remap_n, Scalar(0,0,0), Scalar(5,5,5), mask);
+    inRange(result, Scalar(0,0,0), Scalar(5,5,5), mask);
     base = cv::imread("gradient.jpg", 1);
-    bitwise_or(remap_n, base, rest,mask);
-    remap_n = remap_n + rest;
-    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + ".jpg", remap_n);
+    bitwise_or(result, base, rest,mask);
+    result = result + rest;
+    imwrite(".\\positional\\"+ fixedLength(f1) + "_" +fixedLength(f2) + ".jpg", result);
     return 0;
 }
 
