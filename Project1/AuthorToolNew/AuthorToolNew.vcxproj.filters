@@ -21,6 +21,9 @@
     <ClCompile Include="NNF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PatchMatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\logo.png">
@@ -29,6 +32,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NNF.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PatchMatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -149,12 +149,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NNF.cpp" />
+    <ClCompile Include="PatchMatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\logo.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NNF.h" />
+    <ClInclude Include="PatchMatch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
