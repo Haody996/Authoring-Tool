@@ -1,1 +1,16 @@
-﻿  example_glfw_opengl3.vcxproj -> C:\Users\jimne\Desktop\AuthorTool\Release\example_glfw_opengl3.exe
+﻿  main.cpp
+  The contents of <filesystem> are available only with C++17 or later.
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(206,88): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(206,72): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(96,14): warning C4100: 'argc': unreferenced formal parameter
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(270,43): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(271,44): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(331,42): warning C4305: 'initializing': truncation from '__int64' to 'int'
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(331,28): warning C4309: 'initializing': truncation of constant value
+C:\Users\jimne\Desktop\AuthorTool\main.cpp(341,233): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+  Generating code
+  1 of 1673 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    22 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  example_glfw_opengl3.vcxproj -> C:\Users\jimne\Desktop\AuthorTool\Release\example_glfw_opengl3.exe

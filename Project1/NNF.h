@@ -33,22 +33,17 @@ class NNF
 		// initialize field from an existing (possibily smaller) NNF
 		void initialize(NNF nnf);
 
-		// compute initial value of the distance term
+	// compute initial value of the distance term
 		void initialize();
 
-		// multi-pass NN-field minimization (see "PatchMatch" - page 4)
+	// multi-pass NN-field minimization (see "PatchMatch" - page 4)
 		void minimize(int pass);
 
-		// minimize a single link 
+	// minimize a single link 
 		void minimizeLink(int x, int y, int dir);
 
-		// compute distance between two patch 
+	// compute distance between two patch 
 		int distance(int x, int y, int xp, int yp);
-
-		// Image reconstruction step
-		Mat reconstruction();
-
-		bool is_clamped(int h, int w, int i0, int i1, int j0, int j1);
 
 };
 

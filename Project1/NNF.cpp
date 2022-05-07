@@ -169,62 +169,6 @@ int NNF::distance(int x, int y, int xp, int yp)
 	return (int)(MAX_DIST * distance / wsum);
 }
 
-Mat NNF::reconstruction()
-{
-	int input_width = input.size().width;
-	int input_height = input.size().height;
-
-	int output_width = output.size().width;
-	int output_height = output.size().height;
-
-	Mat reconstructed(input_height, input_width, CV_8UC3, Scalar(0, 0, 0));
-	Mat weights(input_height, input_width, CV_8UC3, Scalar(1.0, 1.0, 1.0));
-
-	int channels = 3;
-
-	int i1, j1, nnf_i1, nnf_j1;
-	float nnf_i, nnf_j;
-
-	int half_patch_size = static_cast <int> (floor(S / 2.0));
-
-	for (int i = half_patch_size + 1; i < field.size().height; i++)
-		for (int j = half_patch_size + 1; j < field.size().width; j++) {
-			nnf_i = field.at<cv::Vec3b>(i, j)[0];
-			nnf_j = field.at<cv::Vec3b>(i, j)[1];
-			for (int k = -half_patch_size; k < 1; k++)
-				for (int l = -half_patch_size; l < 1; l++) {
-					i1 = i + k, j1 = j + l;
-					nnf_i1 = static_cast <int> (nnf_i) + l;
-					nnf_j1 = static_cast <int> (nnf_j) + k;
-					if (is_clamped(output_height, output_width,
-						nnf_i1, nnf_i1 + S,
-						nnf_j1, nnf_j1 + S)) {
-						// copy patch and increment weights
-						for (size_t idx = 0; idx < S; idx++)
-							for (size_t idy = 0; idy < S; idy++)
-								for (size_t idz = 0; idz < channels; idz++) {
-									reconstructed.at<cv::Vec3b>(i1 + idx, j1 + idy)[idz] += output.at<cv::Vec3b>(nnf_i1 + idx, nnf_j1 + idy)[idz];
-									weights.at<cv::Vec3b>(i1 + idx, j1 + idy)[idz] += 1.0;
-								}
-					}
-				}
-		}
-	for (size_t idx = 0; idx < input_height; idx++)
-		for (size_t idy = 0; idy < input_width; idy++)
-			for (size_t idz = 0; idz < channels; idz++)
-				reconstructed.at<cv::Vec3b>(idx, idy)[idz] /= weights.at<cv::Vec3b>(idx, idy)[idz];
-	return reconstructed;
-}
-
-bool NNF::is_clamped(int h, int w, int i0, int i1, int j0, int j1)
-{
-	bool p1 = (i0 < h) && (i0 > 0.f);
-	p1 = p1 && (i1 < h) && (i1 > 0.f);
-	p1 = p1 && (j0 < w) && (j0 > 0.f);
-	p1 = p1 && (j1 < w) && j1 > 0.f;
-	return p1;
-}
-
 void NNF::minimize(int pass)
 {
 	{
@@ -246,4 +190,3 @@ void NNF::minimize(int pass)
 		}
 	}
 }
-

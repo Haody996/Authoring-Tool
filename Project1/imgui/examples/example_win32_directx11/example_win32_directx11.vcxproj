@@ -144,17 +144,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-<<<<<<< HEAD:Project1/AuthorToolNew/AuthorToolNew.vcxproj
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="NNF.cpp" />
-    <ClCompile Include="PatchMatch.cpp" />
-=======
     <ClInclude Include="..\..\imconfig.h" />
     <ClInclude Include="..\..\imgui.h" />
     <ClInclude Include="..\..\imgui_internal.h" />
     <ClInclude Include="..\..\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\..\backends\imgui_impl_win32.h" />
->>>>>>> 55c12d1d4c54830564dcbc5e61da6b5521940ed7:Project1/imgui/examples/example_win32_directx11/example_win32_directx11.vcxproj
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\imgui.cpp" />
@@ -167,13 +161,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD:Project1/AuthorToolNew/AuthorToolNew.vcxproj
-    <ClInclude Include="NNF.h" />
-    <ClInclude Include="PatchMatch.h" />
-=======
     <None Include="..\..\misc\debuggers\imgui.natvis" />
     <None Include="..\README.txt" />
->>>>>>> 55c12d1d4c54830564dcbc5e61da6b5521940ed7:Project1/imgui/examples/example_win32_directx11/example_win32_directx11.vcxproj
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

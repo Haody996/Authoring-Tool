@@ -1,12 +1,9 @@
-// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
-// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
+#include <filesystem>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
@@ -34,7 +31,7 @@ using namespace Magick;
 #define GL_CLAMP_TO_EDGE 0x812F
 
 std::string fixedLength(int value, int digits);
-int Gradient(int, int);
+int Gradient(int, int, string);
 int PositionalGuide(int, int, string);
 
 void EdgeGuide(string source, string distination);
@@ -128,7 +125,7 @@ int main(int argc, char** argv)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Stylize Your Video", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -176,8 +173,8 @@ int main(int argc, char** argv)
             static int counter = 0;
 
             ImGui::Begin("Select your video sequence");                          
-
-            static char buf1[64] = ".\\resources\\target\\"; ImGui::InputText("Paste your video sequence directory here", buf1, 64);
+            ImGui::Text("Format of your video frame sequence: 000.jpg, 001.jpg...");
+            static char buf1[64] = ".\\resources\\target\\"; ImGui::InputText("Paste your video frame sequence directory here", buf1, 64);
             static char buf2[64] = ".\\keyframe_guides\\"; ImGui::InputText("Paste your video keyframe folder directory here", buf2, 64);
             static char buf3[64] = ".\\keyframe_guides\\keyframe.jpg"; ImGui::InputText("Paste your keyframe file location here", buf3, 64);
 
@@ -195,11 +192,7 @@ int main(int argc, char** argv)
             //std::cout << buf2 << std::endl;
 
             ImGui::Text("Press button to start video stylization");               // Display some text (you can use a format strings too)
-            //ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            //ImGui::Checkbox("Another Window", &show_another_window);
 
-            //ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             if (ImGui::Button("Start")) {
 
@@ -207,8 +200,8 @@ int main(int argc, char** argv)
 
                 show_another_window = true;
             }                           
-            ImGui::Text("Completed frames: %d", 1);
-            ImGui::Text("Your Keyframe:", 1);
+            ImGui::Text("Completed frames: %d out of %d", 0 , 100);
+            ImGui::Text("Your Keyframe:");
             if (ret) {
                 ImGui::Image((void*)(intptr_t)my_image_texture, ImVec2(my_image_width, my_image_height));
             }
@@ -269,12 +262,14 @@ int Stylize(string targetFolder,string keyframeFolder, string keyframeLocation)
     double lambda_edge = 2;
     double lambda_temp = 0.5;
 
+    
 
+    
     //base for positional guide
     target.read(targetFolder + "000.jpg");
     unsigned int w = target.size().width();
     unsigned int h = target.size().height();
-    Gradient(w, h);
+    Gradient(w, h, keyframeFolder);
 
     //get any positional guide, e.g. between keyframe 0 and target frame 10
 
@@ -296,18 +291,20 @@ int Stylize(string targetFolder,string keyframeFolder, string keyframeLocation)
     for (int i = 1; i < 100; i++) {
         PositionalGuide(0, i, targetFolder);
     }
+
     
+
 
 
     Image key, key_origin;
     key.read(keyframeLocation);
     key_origin.read(targetFolder + "000.jpg");
 
-    Mat col_origin = imread(keyframeFolder + "origin.jpg");
+    Mat col_origin = imread(targetFolder + "000.jpg");
     Mat pos_origin = imread(keyframeFolder + "gradient.jpg");
-    Mat edge_origin = imread(keyframeFolder + "edge.jpg");
+    Mat edge_origin = imread(".\\edges\\000.jpg");
     Mat keyframe = imread(keyframeLocation);
-
+    imwrite(".\\result\\000.jpg",keyframe);
 
     for (int i = 1; i < 100; i++) {
         Mat prev = imread(".\\result\\" + fixedLength(i - 1, 3) + ".jpg");
@@ -334,14 +331,14 @@ int Stylize(string targetFolder,string keyframeFolder, string keyframeLocation)
                 int minE = 10000000000000;
                 int temppy = qy, temppx = qx;
 
-                for (int py = qy - 20; py < qy + 20; py++) {
-                    for (int px = qx - 100; px < qx + 10; px++) {
+                for (int py = qy - 2; py < qy + 2; py++) {
+                    for (int px = qx - 2; px < qx + 2; px++) {
                         if (px < 0 || px >= width || py < 0 || py >= height) {
 
                         }
                         else {
-                            int e = Difference(keyframe, temporal, px, py, qx, qy);
-                            e += lambda_col * Difference(col_origin, col_target, px, py, qx, qy) + lambda_pos * Difference(pos_origin, pos_target, px, py, qx, qy) + lambda_edge * Difference(edge_origin, edge_target, px, py, qx, qy);
+                            int e = Difference(keyframe, prev, px, py, qx, qy);
+                            e += lambda_col * Difference(col_origin, col_target, px, py, qx, qy) + lambda_pos * Difference(pos_origin, pos_target, px, py, qx, qy) + lambda_edge * Difference(edge_origin, edge_target, px, py, qx, qy) + lambda_temp * Difference(temporal,keyframe,px,py,qx,qy);
 
                             if (e < minE) {
                                 minE = e;
@@ -487,7 +484,7 @@ void createNewFrame(cv::Mat& frame, const cv::Mat& flow, float shift, cv::Mat& n
     frame = newFrame;
 }
 
-int Gradient(int width, int height) {
+int Gradient(int width, int height, string keyframeFolder) {
     Image gradient(Geometry(width, height), "blue");
     for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
@@ -496,6 +493,6 @@ int Gradient(int width, int height) {
             gradient.pixelColor(w, h, ColorRGB(w_color, h_color, 0));
         }
     }
-    gradient.write("gradient.jpg");
+    gradient.write(keyframeFolder + "gradient.jpg");
     return 0;
 }
